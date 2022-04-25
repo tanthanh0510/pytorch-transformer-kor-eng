@@ -1,5 +1,6 @@
 import time
 import random
+import os
 
 import torch
 import torch.nn as nn
@@ -30,6 +31,9 @@ class Trainer:
         self.model = Transformer(self.params)
         self.model.to(self.params.device)
 
+        self.epoch = 0
+        self.best_valid_loss = float('inf')
+
         # Scheduling Optimzer
         self.optimizer = ScheduledAdam(
             optim.Adam(self.model.parameters(), betas=(0.9, 0.98), eps=1e-9),
@@ -37,13 +41,19 @@ class Trainer:
             warm_steps=params.warm_steps
         )
 
+        if os.path.exists(self.params.save_model):
+            train_state = torch.load(self.params.save_model)
+            self.model.load_state_dict(train_state['model'])
+            self.optimizer.load_state_dict(train_state['optimizer'])
+            self.epoch = train_state['epoch']
+            self.best_valid_loss = train_state['best_valid_loss']
+
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.params.pad_idx)
         self.criterion.to(self.params.device)
 
     def train(self):
         print(self.model)
-        print(f'The model has {self.model.count_params():,} trainable parameters')
-        best_valid_loss = float('inf')
+        print(f'The model has {self.model.count_params():,} trainable parameters')        
 
         for epoch in range(self.params.num_epoch):
             self.model.train()
@@ -81,9 +91,15 @@ class Trainer:
             end_time = time.time()
             epoch_mins, epoch_secs = epoch_time(start_time, end_time)
 
-            if valid_loss < best_valid_loss:
-                best_valid_loss = valid_loss
-                torch.save(self.model.state_dict(), self.params.save_model)
+            if valid_loss < self.best_valid_loss:
+                self.best_valid_loss = valid_loss                
+                # torch.save(self.model.state_dict(), self.params.save_model)
+                torch.save({
+                            'epoch': epoch,
+                            'model': self.model.state_dict(),
+                            'optimizer': self.optimizer.state_dict(),
+                            'best_valid_loss': self.best_valid_loss,
+                        }, self.params.save_model)
 
             print(f'Epoch: {epoch+1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s')
             print(f'\tTrain Loss: {train_loss:.3f} | Val. Loss: {valid_loss:.3f}')

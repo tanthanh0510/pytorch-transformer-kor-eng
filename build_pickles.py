@@ -55,6 +55,7 @@ def build_vocab(config):
     eng = ttd.Field(tokenize='spacy',
                     init_token='<sos>',
                     eos_token='<eos>',
+                    tokenizer_language='en_core_web_sm',
                     lower=True,
                     batch_first=True)
 
