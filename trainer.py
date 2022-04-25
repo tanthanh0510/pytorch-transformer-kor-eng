@@ -44,7 +44,7 @@ class Trainer:
         if os.path.exists(self.params.save_model):
             train_state = torch.load(self.params.save_model)
             self.model.load_state_dict(train_state['model'])
-            self.optimizer.load_state_dict(train_state['optimizer'])
+            self.optimizer.optimizer.load_state_dict(train_state['optimizer'])
             self.epoch = train_state['epoch']
             self.best_valid_loss = train_state['best_valid_loss']
 
