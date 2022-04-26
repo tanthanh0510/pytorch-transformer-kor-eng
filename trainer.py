@@ -1,6 +1,7 @@
 import time
 import random
 import os
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -54,15 +55,16 @@ class Trainer:
         self.criterion.to(self.params.device)
 
     def train(self):
-        print(self.model)
-        print(f'The model has {self.model.count_params():,} trainable parameters')        
+        print(f'The model has {self.model.count_params():,} trainable parameters')
+        print(f'Epoch: {self.epoch}')
+        print(f'Best_valid_loss: {self.best_valid_loss}')
 
-        for epoch in range(self.params.num_epoch):
+        for epoch in range(self.epoch,self.params.num_epoch):
             self.model.train()
             epoch_loss = 0
             start_time = time.time()
-
-            for batch in self.train_iter:
+            pbar = tqdm(self.train_iter, desc=f"Train on epoch {epoch}")
+            for batch in pbar:
                 # For each batch, first zero the gradients
                 self.optimizer.zero_grad()
                 source = batch.kor
@@ -83,6 +85,8 @@ class Trainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.params.clip)
 
                 self.optimizer.step()
+
+                pbar.set_postfix(loss=loss.item())
 
                 # 'item' method is used to extract a scalar from a tensor which only contains a single value.
                 epoch_loss += loss.item()
@@ -113,7 +117,8 @@ class Trainer:
         epoch_loss = 0
 
         with torch.no_grad():
-            for batch in self.valid_iter:
+            pbar = tqdm(self.valid_iter, desc=f"Evaluate: ")
+            for batch in pbar:
                 source = batch.kor
                 target = batch.eng
 
@@ -123,6 +128,8 @@ class Trainer:
                 target = target[:, 1:].contiguous().view(-1)
 
                 loss = self.criterion(output, target)
+                
+                pbar.set_postfix(loss=loss.item())
 
                 epoch_loss += loss.item()
 
