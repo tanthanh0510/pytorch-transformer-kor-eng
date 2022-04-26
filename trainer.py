@@ -103,7 +103,7 @@ class Trainer:
                 torch.save({
                             'epoch': epoch,
                             'model': self.model.state_dict(),
-                            'optimizer': self.optimizer.state_dict(),
+                            'optimizer': self.optimizer.optimizer.state_dict(),
                             'best_valid_loss': self.best_valid_loss,
                             'current_steps': self.optimizer.current_steps,
                             'init_lr': self.optimizer.init_lr
