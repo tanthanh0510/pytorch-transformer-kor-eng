@@ -45,8 +45,10 @@ class Trainer:
             train_state = torch.load(self.params.save_model)
             self.model.load_state_dict(train_state['model'])
             self.optimizer.optimizer.load_state_dict(train_state['optimizer'])
+            self.optimizer.current_steps = train_state['current_steps']
+            self.optimizer.init_lr = train_state['init_lr']
             self.epoch = train_state['epoch']
-            self.best_valid_loss = train_state['best_valid_loss']
+            self.best_valid_loss = train_state['best_valid_loss']            
 
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.params.pad_idx)
         self.criterion.to(self.params.device)
@@ -99,6 +101,8 @@ class Trainer:
                             'model': self.model.state_dict(),
                             'optimizer': self.optimizer.state_dict(),
                             'best_valid_loss': self.best_valid_loss,
+                            'current_steps': self.optimizer.current_steps,
+                            'init_lr': self.optimizer.init_lr
                         }, self.params.save_model)
 
             print(f'Epoch: {epoch+1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s')
