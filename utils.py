@@ -39,6 +39,17 @@ def load_dataset(mode):
 
         return train_data, valid_data
 
+    elif mode == 'train_full':
+        train_file = os.path.join(data_dir,'corpus.csv')
+        train_data = pd.read_csv(train_file, encoding='utf-8')
+        print(f'Number of testing examples: {len(train_data)}')
+
+        test_file = os.path.join(data_dir, 'test.csv')
+        test_data = pd.read_csv(test_file, encoding='utf-8')
+
+        print(f'Number of testing examples: {len(test_data)}')
+
+        return train_data, test_data
     else:
         test_file = os.path.join(data_dir, 'test.csv')
         test_data = pd.read_csv(test_file, encoding='utf-8')
@@ -109,7 +120,24 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # convert pandas DataFrame to torchtext dataset
-    if mode == 'train':
+    if mode == 'test':
+        test_data = convert_to_dataset(test_data, kor, eng)
+
+        # defines dummy list will be passed to the BucketIterator
+        dummy = list()
+
+        # make iterator using test dataset
+        print(f'Make Iterators for testing . . .')
+        test_iter, _ = ttd.BucketIterator.splits(
+            (test_data, dummy),
+            sort_key=lambda sent: len(sent.kor),
+            sort_within_batch=True,
+            batch_size=batch_size,
+            device=device)
+
+        return test_iter
+
+    else:
         train_data = convert_to_dataset(train_data, kor, eng)
         valid_data = convert_to_dataset(valid_data, kor, eng)
 
@@ -126,23 +154,6 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
             device=device)
 
         return train_iter, valid_iter
-
-    else:
-        test_data = convert_to_dataset(test_data, kor, eng)
-
-        # defines dummy list will be passed to the BucketIterator
-        dummy = list()
-
-        # make iterator using test dataset
-        print(f'Make Iterators for testing . . .')
-        test_iter, _ = ttd.BucketIterator.splits(
-            (test_data, dummy),
-            sort_key=lambda sent: len(sent.kor),
-            sort_within_batch=True,
-            batch_size=batch_size,
-            device=device)
-
-        return test_iter
 
 
 def epoch_time(start_time, end_time):

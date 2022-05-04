@@ -21,13 +21,12 @@ class Trainer:
         self.params = params
 
         # Train mode
-        if mode == 'train':
-            self.train_iter = train_iter
-            self.valid_iter = valid_iter
-
+        if mode == 'test':
+           self.test_iter = test_iter
         # Test mode
         else:
-            self.test_iter = test_iter
+            self.train_iter = train_iter
+            self.valid_iter = valid_iter
 
         self.model = Transformer(self.params)
         self.model.to(self.params.device)
