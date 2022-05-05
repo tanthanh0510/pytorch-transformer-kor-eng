@@ -25,7 +25,7 @@ def predict(config):
 
     # select model and load trained model
     model = Transformer(params)
-    model.load_state_dict(torch.load(params.save_model))
+    model.load_state_dict(torch.load(params.save_model)["model"])
     model.to(params.device)
     model.eval()
 

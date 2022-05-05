@@ -43,12 +43,16 @@ class Trainer:
 
         if os.path.exists(self.params.save_model):
             train_state = torch.load(self.params.save_model)
-            self.model.load_state_dict(train_state['model'])
-            self.optimizer.optimizer.load_state_dict(train_state['optimizer'])
-            self.optimizer.current_steps = train_state['current_steps']
-            self.optimizer.init_lr = train_state['init_lr']
-            self.epoch = train_state['epoch']
-            self.best_valid_loss = train_state['best_valid_loss']            
+            self.epochVal = train_state['epoch']
+            self.best_valid_loss = train_state['best_valid_loss']
+
+        if os.path.exists("modelTrain.pt"):
+          train_state = torch.load("modelTrain.pt")
+          self.model.load_state_dict(train_state['model'])
+          self.optimizer.optimizer.load_state_dict(train_state['optimizer'])
+          self.optimizer.current_steps = train_state['current_steps']
+          self.optimizer.init_lr = train_state['init_lr']
+          self.epoch = train_state['epoch']
 
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.params.pad_idx)
         self.criterion.to(self.params.device)
